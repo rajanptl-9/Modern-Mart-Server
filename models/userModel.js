@@ -24,12 +24,20 @@ var userSchema = new mongoose.Schema({
         type:String,
         required:true,
     },
+    role:{
+        type:String,
+        default:"user",
+    },
 });
 
 userSchema.pre("save", async function(next){
-    const salt = bcrypt.genSaltSync(9);
+    const salt = bcrypt.genSaltSync(parseInt(process.env.SALT_ROUNDS));
     this.password = await bcrypt.hash(this.password, salt);
 })
 
+// method to compare a plain text password with the hashed one stored in the database
+userSchema.methods.isPasswordCorrect = async function(plaintext) {
+    return await bcrypt.compare(plaintext, this.password);
+}
 
 module.exports = mongoose.model('User', userSchema);
