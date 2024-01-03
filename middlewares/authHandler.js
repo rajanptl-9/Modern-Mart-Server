@@ -30,4 +30,7 @@ const isAdmin = asyncHandler( async (req,res,next) => {
     }
 });
 
-module.exports = { authHandler, isAdmin };
+module.exports = { 
+    authHandler, 
+    isAdmin
+};
