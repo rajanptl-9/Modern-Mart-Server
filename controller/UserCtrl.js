@@ -28,7 +28,25 @@ const loginUser = asyncHandler(async(req,res) => {
     }else{
         throw new Error ("Invalid Email or Password!");
     }
-    // console.log(email,password);
 });
 
-module.exports = {createUser, loginUser};
+const getAllUsers = asyncHandler(async (req,res) => {
+    try {
+        const getUsers = await User.find();
+        res.json(getUsers);
+    } catch (error) {
+        throw new Error (error);
+    }
+});
+
+const getOneUser = asyncHandler(async (req,res) => {
+    const {id} = req.params;
+    try{
+        const user = await User.findById(id);
+        res.json(user);
+    }catch(error){
+        throw new Error(error);
+    }
+}) 
+
+module.exports = {createUser, loginUser, getAllUsers, getOneUser};
