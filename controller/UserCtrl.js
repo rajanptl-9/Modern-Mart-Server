@@ -40,7 +40,7 @@ const getAllUsers = asyncHandler(async (req,res) => {
 });
 
 const getOneUser = asyncHandler(async (req,res) => {
-    const {id} = req.params;
+    const {id} = req.user;
     try{
         const user = await User.findById(id);
         res.json(user);
@@ -50,7 +50,7 @@ const getOneUser = asyncHandler(async (req,res) => {
 });
 
 const updateUser = asyncHandler(async (req,res) => {
-    const {id} = req.params;
+    const {id} = req.user;
     try{
         const user = await User.findByIdAndUpdate(id, {
             firstname : req?.body?.firstname,
@@ -65,7 +65,7 @@ const updateUser = asyncHandler(async (req,res) => {
 });
 
 const deleteUser = asyncHandler(async (req,res) => {
-    const {id} = req.params;
+    const {id} = req.user;
     try{
         const user = await User.findByIdAndDelete(id);
         res.json(user);
