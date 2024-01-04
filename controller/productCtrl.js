@@ -1,8 +1,12 @@
 const Product = require('../models/prodModel');
 const asyncHandler = require("express-async-handler");
+const slugify = require('slugify');
 
 const createProduct = asyncHandler(async(req,res) => {
     try {
+        if(req.body.title){
+            req.body.slug = slugify(req.body.title);
+        }
         const newProd = await Product.create(req.body);
         res.json(newProd);
     } catch (error) {
