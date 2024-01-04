@@ -12,9 +12,6 @@ const createProduct = asyncHandler(async(req,res) => {
     } catch (error) {
         throw new Error(error);
     }
-    res.json({
-        message: "Hey! lets create product.",
-    })
 });
 
 const getOneProduct = asyncHandler(async(req,res) => {
@@ -37,8 +34,36 @@ const getAllProducts = asyncHandler(async(req,res) => {
 
 });
 
+const updateProduct = asyncHandler(async(req,res) => {
+    const { id } = req.params;
+    try {
+        if(req.body.title){
+            req.body.slug = slugify(req.body.title);
+        }
+        const updateProd = await Product.findByIdAndUpdate(id,req.body,{new:true});
+        res.json(updateProd);
+    } catch (error) {
+        throw new Error(error);
+    }
+});
+
+
+const deleteProduct = asyncHandler(async(req,res) => {
+    const { id } = req.params;
+    try {
+        const deleteProd = await Product.findByIdAndDelete(id);
+        res.json(deleteProd);
+    } catch (error) {
+        throw new Error(error);
+    }
+});
+
+
+
 module.exports = {
     createProduct,
     getOneProduct,
     getAllProducts,
+    updateProduct,
+    deleteProduct,
 };
