@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcrypt');
+const crypto = require('crypto');
 
 var userSchema = new mongoose.Schema({
     firstname:{
@@ -41,11 +42,17 @@ var userSchema = new mongoose.Schema({
     refreshToken: {
         type:String,
     },
+    passwordChangedAt: Date,
+    passwordResetToken: String,
+    passwordResetExpire: Date,
 },{
     timestamps: true,
 });
 
 userSchema.pre("save", async function(next){
+    if(!this.isModified('password')){
+        next();
+    }
     const salt = bcrypt.genSaltSync(parseInt(process.env.SALT_ROUNDS));
     this.password = await bcrypt.hash(this.password, salt);
 })
@@ -53,6 +60,13 @@ userSchema.pre("save", async function(next){
 // method to compare a plain text password with the hashed one stored in the database
 userSchema.methods.isPasswordCorrect = async function(plaintext) {
     return await bcrypt.compare(plaintext, this.password);
+}
+
+userSchema.methods.createResetPasswordToken = async function(){
+    const resetToken = crypto.randomBytes(32).toString("hex");
+    this.passwordResetToken = crypto.createHash("sha256").update(resetToken).digest("hex");
+    this.passwordResetExpire = Date.now()+ 15*60*1000;
+    resetToken;
 }
 
 module.exports = mongoose.model('User', userSchema);
