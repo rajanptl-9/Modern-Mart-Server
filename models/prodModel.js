@@ -48,9 +48,14 @@ var productSchema = new mongoose.Schema({
         required: true,
     },
     rating:[{
-        star:Number,
+        star: Number,
+        comment: String,
         postedby: {type: mongoose.Schema.Types.ObjectId, ref: "User"},
-    }]
+    }],
+    totalRating:{
+        type: String,
+        default: 0,
+    }
 },{
     timestamps: true,
 });
