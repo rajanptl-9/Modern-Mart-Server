@@ -252,6 +252,20 @@ const getWishlist = asyncHandler(async(req,res) => {
     }
 });
 
+const saveAddress = asyncHandler(async(req,res)=>{
+    const { _id } = req.user; 
+    validateMongoDbId(_id);
+    const { address } = req.body;
+    try {
+        const updatedAddressUser = await User.findByIdAndUpdate(_id,{
+            address:address
+        },{ new:true });
+        res.json(updatedAddressUser);
+    } catch (error) {
+        throw new Error(error);
+    }
+});
+
 module.exports = {
     createUser, 
     loginUser, 
@@ -268,4 +282,5 @@ module.exports = {
     forgotPasswordToken,
     resetPassword,
     getWishlist,
+    saveAddress, 
 };
