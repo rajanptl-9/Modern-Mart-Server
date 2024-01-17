@@ -3,6 +3,8 @@ const User = require('../models/userModel');
 const asyncHandler = require("express-async-handler");
 const slugify = require('slugify');
 const validateMongoDbId = require('../utils/validateMongodbID');
+const cloudinaryUploadImage = require('../utils/cloudinary');
+const fs = require('fs');
 
 const createProduct = asyncHandler(async (req, res) => {
     try {
@@ -125,8 +127,8 @@ const userRating = asyncHandler(async (req, res) => {
     const { star, comment, prodId } = req.body;
     try {
         const product = await Product.findById(prodId);
-        let isRatedByUser = product.rating.find(user => user.postedby.toString() === id.toString());        
-        
+        let isRatedByUser = product.rating.find(user => user.postedby.toString() === id.toString());
+
         if (isRatedByUser) {
             const updateRating = await Product.updateOne({
                 rating: { $elemMatch: isRatedByUser }
@@ -138,7 +140,7 @@ const userRating = asyncHandler(async (req, res) => {
                 $push: {
                     rating: {
                         star: star,
-                        comment:comment,
+                        comment: comment,
                         postedby: id,
                     },
                 },
@@ -146,16 +148,57 @@ const userRating = asyncHandler(async (req, res) => {
         }
         const findProduct = await Product.findById(prodId);
         const countRating = findProduct.rating.length;
-        let sumRating = findProduct.rating.map((item) => item.star).reduce((prev,curr) => prev+curr,0);
-        let finalRating = (sumRating/countRating).toFixed(1);
-        let updatedRatedProduct = await Product.findByIdAndUpdate(prodId,{
-            totalRating : finalRating,
-        },{new:true});
+        let sumRating = findProduct.rating.map((item) => item.star).reduce((prev, curr) => prev + curr, 0);
+        let finalRating = (sumRating / countRating).toFixed(1);
+        let updatedRatedProduct = await Product.findByIdAndUpdate(prodId, {
+            totalRating: finalRating,
+        }, { new: true });
         res.json(updatedRatedProduct);
 
     } catch (error) {
         throw new Error(error);
     }
+});
+
+const uploadImages = asyncHandler(async (req, res,next) => {
+    const { id } = req.params;
+    validateMongoDbId(id);
+    try {
+        const uploader = (path) => cloudinaryUploadImage(path, "images");
+        const urls = [];
+        const files = req.files;
+        for (const file of files) {
+            const {path} = file;     
+            const result = await uploader(path);  
+            urls.push(result);
+            req.unlinkPaths.push(path);
+        }
+        const imgAddedProduct = await Product.findByIdAndUpdate(id, {
+            images: urls.map(path => { return path })
+        }, { new: true });
+        // res.json(imgAddedProduct);
+        req.response = imgAddedProduct;
+        req.files = {};
+        next();        
+    } catch (error) {
+        throw new Error(error);
+    }
+});
+
+const unlinkFileswithPaths = asyncHandler(async (req,res) => {
+    const { unlinkPaths } = req;
+    console.log("Unlinking paths...");
+    
+    try {
+        if(unlinkPaths){
+            for(const path of unlinkPaths){
+                await fs.unlinkSync(path);
+            }
+        }
+    res.json(req.response);  
+    } catch (error) {
+        throw new Error(error);
+    }  
 });
 
 module.exports = {
@@ -166,4 +209,6 @@ module.exports = {
     deleteProduct,
     addToWishlist,
     userRating,
+    uploadImages,
+    unlinkFileswithPaths,
 };
