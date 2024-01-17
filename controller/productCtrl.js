@@ -190,11 +190,11 @@ const unlinkFileswithPaths = asyncHandler(async (req,res) => {
     console.log("Unlinking paths...");
     
     try {
-        if(unlinkPaths){
-            for(const path of unlinkPaths){
-                await fs.unlinkSync(path);
-            }
-        }
+        // if(unlinkPaths){
+        //     for(const path of unlinkPaths){
+        //         await fs.unlinkSync(path);
+        //     }
+        // }
     res.json(req.response);  
     } catch (error) {
         throw new Error(error);
