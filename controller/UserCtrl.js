@@ -43,6 +43,32 @@ const loginUser = asyncHandler(async(req,res) => {
     }
 });
 
+const loginAdmin = asyncHandler(async(req,res) => {
+    const {email, password} = req.body;
+    const findAdmin = await User.findOne({email:email}).maxTimeMS(20000);
+    if(findAdmin.role !== "admin") throw new Error("Not Authorized!");
+    if(findAdmin && await findAdmin.isPasswordCorrect(password)){
+        const refreshToken = await getRefreshSignedToken(findAdmin?._id);
+        const updateAdmin = await User.findByIdAndUpdate(findAdmin?._id,{
+            refreshToken: refreshToken,
+        },{ new:true });
+        res.cookie('refreshToken',refreshToken,{
+            httpOnly: true,
+            maxAge: 72*3600*1000,
+        });
+        res.json({
+            _id: findAdmin?._id,
+            firstname: findAdmin?.firstname,
+            lastname: findAdmin?.lastname,
+            email: findAdmin?.email,
+            mobile: findAdmin?.mobile,
+            token: getSignedJwtToken(findAdmin?._id),
+        });
+    }else{
+        throw new Error ("Invalid Email or Password!");
+    }
+});
+
 const logoutUser = asyncHandler(async(req,res) => {
     const cookie = req.cookies;
     console.log(cookie);   
@@ -215,9 +241,21 @@ const resetPassword = asyncHandler(async(req,res) =>{
     res.send(user);
 });
 
+const getWishlist = asyncHandler(async(req,res) => {
+    const { _id } = req.user;
+    validateMongoDbId(_id);
+    try {
+        const findUser = await User.findById(_id).populate("wishlist");
+        res.json(findUser);
+    } catch (error) {
+        throw new Error(error);
+    }
+});
+
 module.exports = {
     createUser, 
     loginUser, 
+    loginAdmin,
     getAllUsers, 
     getOneUser, 
     updateUser, 
@@ -229,4 +267,5 @@ module.exports = {
     updatePassword,
     forgotPasswordToken,
     resetPassword,
+    getWishlist,
 };
