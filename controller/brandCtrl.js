@@ -13,8 +13,8 @@ const createBrand = asyncHandler(async(req,res) => {
 
 const updateBrand = asyncHandler(async(req,res) => {
     const {id} = req.params;
+    validateMongoDbId(id);
     try {       
-        validateMongoDbId(id);
         const updateBrand = await Brand.findByIdAndUpdate(id,req.body,{new:true});
         res.json(updateBrand);
     } catch (error) {
@@ -24,8 +24,8 @@ const updateBrand = asyncHandler(async(req,res) => {
 
 const deleteBrand = asyncHandler(async(req,res) => {
     const {id} = req.params;
+    validateMongoDbId(id);
     try {       
-        validateMongoDbId(id);
         const deleteBrand = await Brand.findByIdAndDelete(id);
         res.json(deleteBrand);
     } catch (error) {
