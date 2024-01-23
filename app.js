@@ -12,6 +12,7 @@ const prodCategoryRoute = require('./routes/prodCategoryRoute');
 const brandRoute = require('./routes/brandRoute');
 const couponRoute = require('./routes/couponRoute');
 const colorRoute = require('./routes/colorRoute');
+const enquiryRoute = require('./routes/enquiryRoute');
 
 const { notFound, errorHandler } = require('./middlewares/errorHandler');
 
@@ -30,6 +31,7 @@ app.use('/api/category',prodCategoryRoute);
 app.use('/api/brand',brandRoute);
 app.use('/api/coupon',couponRoute);
 app.use('/api/color',colorRoute);
+app.use('/api/enquiry',enquiryRoute);
 
 app.use(notFound);
 app.use(errorHandler);
