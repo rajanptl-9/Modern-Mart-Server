@@ -1,14 +1,16 @@
-const { getSignedJwtToken } = require("../config/jwtToken");
 const User = require("../models/userModel");
 const Cart = require("../models/cartModel");
 const Product = require("../models/prodModel");
 const Coupon = require("../models/couponModel");
+const Order = require("../models/orderModel");
+const { getSignedJwtToken } = require("../config/jwtToken");
 const asyncHandler = require('express-async-handler');
 const validateMongoDbId = require("../utils/validateMongodbID");
 const { getRefreshSignedToken } = require('../config/refreshToken');
 const jwt = require('jsonwebtoken');
 const { sendMail } = require("./emailCtrl");
 const crypto = require('crypto');
+const uniqid = require('uniqid');   
 
 const createUser = asyncHandler(async (req,res) => {
     const email = req.body.email;
@@ -174,6 +176,7 @@ const blockUser = asyncHandler( async (req,res) => {
         throw new Error(error);
     }
 });
+
 const unblockUser = asyncHandler( async (req,res) => {
     let {id} = req.params;
     validateMongoDbId(id);
@@ -282,7 +285,7 @@ const userCart = asyncHandler(async (req,res) => {
         let cartTotal = 0;
         for(const prod of cart){
             const newProd = {};
-            newProd._id = prod._id;
+            newProd.product = prod._id;
             newProd.count = prod.count;
             newProd.color = prod.color;
             const getPrice = await Product.findById(prod._id).select("price").exec();
@@ -344,6 +347,79 @@ const applyCoupon = asyncHandler(async (req,res) => {
     } 
 });
 
+const makeOrder = asyncHandler(async (req,res) => {
+    const { _id } = req.user;    
+    validateMongoDbId(_id);
+    const { COD, couponApplied } = req.body;
+    try {
+        if(!COD) throw new Error("Failed to create order with cash on delivery!");
+        const user = await User.findById(_id);
+        const userCart = await Cart.findOne({orderedBy:user._id});
+        let finalAmount = 0; 
+        if(couponApplied && userCart.totalAfterDiscount){
+            finalAmount = userCart.totalAfterDiscount;
+        }else{
+            finalAmount = userCart.cartTotal;
+        }
+        const newOrder = Order ({
+            products: userCart.products,
+            paymentIntent: {
+                id: uniqid(),
+                method: "COD",
+                amount: finalAmount,
+                status: "Cash On Delivery",
+                createdAt: Date.now(),
+                currency: "usd"
+            },  
+            orderStatus: "Cash On Delivery",
+            orderedBy: user._id,
+        });
+        const createdOrder = await newOrder.save();
+        let update = userCart.products.map(prod => {
+            return { 
+                updateOne:{
+                    filter: {_id: prod._id},
+                    update: { $inc: {quantity: -prod.count, sold: +prod.count }},
+                }
+            }
+        });
+        const updated = await Product.bulkWrite(update,{});
+        res.json({message: "success"});    
+    } catch (error) {
+        throw new Error(error);
+    }
+});
+
+const getOrder = asyncHandler(async (req,res) => {
+    const { _id } = req.user;    
+    validateMongoDbId(_id);
+    try {
+        const findOrder = await Order.find({orderedBy:_id}).populate('products.product').exec();
+        // const findOrder = await Order.findOne({orderedBy:_id});
+        res.json(findOrder);
+    } catch (error) {
+        throw new Error(error);
+    }
+});
+
+const updateOrderStatus = asyncHandler(async (req,res) => {
+    const { _id } = req.user;    
+    validateMongoDbId(_id);
+    const { status } = req.body;
+    const { id } = req.params;    
+    try {
+        const updatedStatus = await Order.findByIdAndUpdate(id,{
+            orderStatus: status,
+            paymentIntent:{
+                status: status,
+            }
+        }, {new:true});
+        res.json(updatedStatus);
+    } catch (error) {
+        throw new Error(error);
+    }
+});
+
 module.exports = {
     createUser, 
     loginUser, 
@@ -365,4 +441,7 @@ module.exports = {
     getCart,
     clearCart,
     applyCoupon,
+    makeOrder,
+    getOrder,
+    updateOrderStatus,
 };
