@@ -21,7 +21,7 @@ const multerFilter = (req, file, cb) => {
     }
 }
 
-const uploadPhoto = multer({
+const uploadPhotos = multer({
     storage: multerStorage,
     fileFilter: multerFilter,
     limits: { fieldSize: 2000000 },
@@ -29,15 +29,25 @@ const uploadPhoto = multer({
 
 const productImageResize = async (req, res, next) => {
     if (!req.files) return next();
-    req.unlinkPaths = [];    
+    let newFiles = [];    
     await Promise.all(
         req.files.map(async file => {
-            await sharp(file.path).resize(300, 300).toFormat('jpeg').jpeg({ quality: 90 }).toFile(`public/images/products/${file.filename}`);
-            req.unlinkPaths.push(file.path);
-            file.path = path.join(__dirname, `../public/images/products/${file.filename}`);
+            const imageData = await fs.promises.readFile(file.path);
+            await sharp(imageData).resize(300, 300).toFormat('jpeg').jpeg({ quality: 90 }).toFile(`public/images/products/${file.filename}`);
+            newFiles.push(path.join(__dirname, `../public/images/products/${file.filename}`));
         })
-    );
+    );    
+    for (const file of req.files) {        
+        fs.unlinkSync(file.path, (err) => {
+            if (err) {
+                console.error(err);
+            } else {
+                console.log('Original File deleted successfully');
+            }
+        });
+    }
+    req.newFiles = newFiles;
     next();
 }
 
-module.exports = { uploadPhoto, productImageResize, };
+module.exports = { uploadPhotos, productImageResize, };
