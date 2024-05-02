@@ -1,32 +1,90 @@
 const mongoose = require('mongoose');
 
 var orderSchema = new mongoose.Schema({
-    products: [{
-        product: {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: "Product",
-        },
-        count: Number,
-        color: String,
-    }],
-    paymentIntent: {},
-    orderStatus:{
-        type: String,
-        default: "Not Processed",
-        enum:[
-            "Not Processed",
-            "Cash On Delivery",
-            "Processing",
-            "Dispatch",
-            "Cancelled",
-            "Delivered",
-        ]
-    },
-    orderedBy:{
+    user: {
         type: mongoose.Schema.Types.ObjectId,
-        ref:"User",
-    }
-},{
+        ref: "User",
+        required: true,
+    },
+    shippingInfo: {
+        firstname: {
+            type: String,
+            required: true,
+        },
+        lastname: {
+            type: String,
+            required: true,
+        },
+        address: {
+            type: String,
+            required: true,
+        },
+        city: {
+            type: String,
+            required: true,
+        },
+        state: {
+            type: String,
+            required: true,
+        },
+        other: {
+            type: String,
+            required: true,
+        },
+        pincode: {
+            type: Number,
+            required: true,
+        },
+    },
+    paymentInfo:{
+        razorpayPaymentId:{
+            type:String,
+            required:true,
+        },
+        // razorpayOrderId:{
+        //     type:String,
+        //     required:true,
+        // },
+    },
+    orderItems: [
+        {
+            product: {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: "Product",
+                required: true,
+            },
+            quantity: {
+                type: Number,
+                required: true,
+            },
+            color:{
+                type: mongoose.Schema.Types.ObjectId,
+                ref: "Color",
+                required: true,
+            },
+            price:{
+                type: Number,
+                required: true,
+            }
+        },
+    ],
+    paidAt:{
+        type:Date,
+        default: Date.now(),
+    },
+    totalPrice:{
+        type:Number,
+        required:true,
+    },
+    totalPriceAfterDiscount:{
+        type:Number,
+        required:true,
+    },
+    orderStatus:{
+        type:String,
+        default:"Ordered",
+    },
+}, {
     timestamps: true,
 });
 

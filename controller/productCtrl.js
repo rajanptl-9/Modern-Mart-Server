@@ -3,7 +3,6 @@ const User = require('../models/userModel');
 const asyncHandler = require("express-async-handler");
 const slugify = require('slugify');
 const validateMongoDbId = require('../utils/validateMongodbID');
-const {cloudinaryUploadImage,cloudinaryDeleteImage} = require('../utils/cloudinary');
 const fs = require('fs');
 
 const createProduct = asyncHandler(async (req, res) => {
@@ -21,7 +20,7 @@ const createProduct = asyncHandler(async (req, res) => {
 const getOneProduct = asyncHandler(async (req, res) => {
     const { id } = req.params;
     try {
-        const prod = await Product.findById(id);
+        const prod = await Product.findById(id).populate("category").populate("brand").populate("color");
         res.json(prod);
     } catch (error) {
         throw new Error(error);
@@ -67,7 +66,7 @@ const getAllProducts = asyncHandler(async (req, res) => {
             if (skip >= totalProducts) throw new Error("This Page does not exists");
         }
 
-        const prod = await query;
+        const prod = await query.populate("category").populate("brand");
         res.json(prod);
     } catch (error) {
         throw new Error(error);
@@ -88,7 +87,6 @@ const updateProduct = asyncHandler(async (req, res) => {
     }
 });
 
-
 const deleteProduct = asyncHandler(async (req, res) => {
     const { id } = req.params;
     try {
@@ -101,7 +99,7 @@ const deleteProduct = asyncHandler(async (req, res) => {
 
 const addToWishlist = asyncHandler(async (req, res) => {
     const { id } = req.user;
-    const { prodId } = req.body;
+    const { prodId } = req.body;        
     validateMongoDbId(prodId);
     try {
         const user = await User.findById(id);
@@ -110,12 +108,46 @@ const addToWishlist = asyncHandler(async (req, res) => {
             let user = await User.findByIdAndUpdate(id, {
                 $pull: { wishlist: prodId }
             }, { new: true });
-            res.json(user);
+            const updatedUser = await User.findById(id).populate("wishlist").populate({
+                path: "wishlist",
+                populate: {
+                    path: "brand",
+                    model: "Brand",
+                }
+            }).select("wishlist").exec();
+            const wishlist = updatedUser.wishlist.map(prod => {
+                return {
+                    _id: prod._id,
+                    title: prod.title,
+                    price: prod.price,
+                    brand: prod.brand.title,
+                    quantity: prod.quantity,
+                    images: prod.images,
+                }
+            });        
+            res.json({wishlist, message: "Product Removed From Wishlist!"});
         } else {
             let user = await User.findByIdAndUpdate(id, {
                 $push: { wishlist: prodId }
             }, { new: true });
-            res.json(user);
+            const updatedUser = await User.findById(id).populate("wishlist").populate({
+                path: "wishlist",
+                populate: {
+                    path: "brand",
+                    model: "Brand",
+                }
+            }).select("wishlist").exec();
+            const wishlist = updatedUser.wishlist.map(prod => {
+                return {
+                    _id: prod._id,
+                    title: prod.title,
+                    price: prod.price,
+                    brand: prod.brand.title,
+                    quantity: prod.quantity,
+                    images: prod.images,
+                }
+            });        
+            res.json({wishlist, message: "Product Added To Wishlist!"});
         }
     } catch (error) {
         throw new Error(error);
@@ -160,40 +192,6 @@ const userRating = asyncHandler(async (req, res) => {
     }
 });
 
-const uploadImages = asyncHandler(async (req, res) => {
-    try {
-        const uploader = (path) => cloudinaryUploadImage(path, "images");
-        const urls = [];
-        const files = req.newFiles;        
-        for (const path of files) {
-            const result = await uploader(path);  
-            urls.push(result);               
-            setTimeout(() => {
-                fs.unlinkSync(path, (err) => {
-                    if (err) {
-                        console.error(err);
-                    } else {
-                        console.log('Product File deleted successfully');
-                    }
-                });
-            }, 2000);
-        }
-        const images = urls.map(path => { return path });
-        res.json(images);
-    } catch (error) {
-        throw new Error(error);
-    }
-});
-
-const deleteImages = asyncHandler(async (req, res) => {
-    const {id} = req.params;
-    try {
-        const deleted = cloudinaryDeleteImage(id);        
-        res.json({message:"Image Deleted Successfully!"});
-    } catch (error) {
-        throw new Error(error);
-    }
-});
 
 module.exports = {
     createProduct,
@@ -203,6 +201,4 @@ module.exports = {
     deleteProduct,
     addToWishlist,
     userRating,
-    uploadImages,
-    deleteImages,
 };

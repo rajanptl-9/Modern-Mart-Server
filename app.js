@@ -1,8 +1,9 @@
-const express = require('express')
+const express = require('express');
 const dotenv = require('dotenv').config();
 const cookieParser = require('cookie-parser');
 const morgan = require('morgan');
 const bodyParser = require('body-parser');
+const cors = require('cors');
 
 const dbConnection = require('./config/dbConnection');
 
@@ -13,11 +14,13 @@ const brandRoute = require('./routes/brandRoute');
 const couponRoute = require('./routes/couponRoute');
 const colorRoute = require('./routes/colorRoute');
 const enquiryRoute = require('./routes/enquiryRoute');
+const uploadRoute = require('./routes/uploadRoute');
 
 const { notFound, errorHandler } = require('./middlewares/errorHandler');
 
 const PORT = process.env.PORT || 8080;
 const app = express()
+app.use(cors());
 
 dbConnection();
 app.use(bodyParser.json());
@@ -32,6 +35,7 @@ app.use('/api/brand',brandRoute);
 app.use('/api/coupon',couponRoute);
 app.use('/api/color',colorRoute);
 app.use('/api/enquiry',enquiryRoute);
+app.use('/api/upload',uploadRoute);
 
 app.use(notFound);
 app.use(errorHandler);

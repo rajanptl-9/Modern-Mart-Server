@@ -3,7 +3,7 @@ const { createEnquiry, updateEnquiry, deleteEnquiry, getOneEnquiry, getAllEnquir
 const { authHandler, isAdmin } = require('../middlewares/authHandler');
 const router = express.Router();
 
-router.post('/',authHandler,isAdmin,createEnquiry);
+router.post('/',createEnquiry);
 router.put('/:id',authHandler,isAdmin,updateEnquiry);
 router.delete('/:id',authHandler,isAdmin,deleteEnquiry);
 router.get('/:id',getOneEnquiry);
