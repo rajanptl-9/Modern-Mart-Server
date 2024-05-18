@@ -27,6 +27,23 @@ const getOneProduct = asyncHandler(async (req, res) => {
     }
 });
 
+const specificProducts = asyncHandler(async (req, res) => {
+
+    const { tag, limit } = req.query;
+    try {        
+        const query = Product.find({
+            tags : {$elemMatch : { $eq : tag}}
+        }).sort("-createdAt");
+        if (limit) {
+            query.limit(parseInt(limit));
+        }
+        const prod = await query.populate("category").populate("brand").populate("color");
+        res.json({ tag, prod });
+    } catch (error) {
+        throw new Error(error);
+    }
+})
+
 const getAllProducts = asyncHandler(async (req, res) => {
     try {
         const queryObj = { ...req.query };
@@ -60,14 +77,20 @@ const getAllProducts = asyncHandler(async (req, res) => {
         const page = req.query.page;
         const limit = req.query.limit || 12;
         const skip = (page - 1) * limit;
-        query = query.skip(skip).limit(limit);
-        if (req.query.page) {
-            const totalProducts = await Product.countDocuments();
-            if (skip >= totalProducts) throw new Error("This Page does not exists");
+        const totalPagesQuery = query.clone();
+        let totalProducts = await totalPagesQuery.countDocuments();
+
+        query = query.skip(skip);
+        if (limit !== Infinity) {
+            query = query.limit(limit);
         }
 
-        const prod = await query.populate("category").populate("brand");
-        res.json(prod);
+        if (req.query.page) {
+            if (skip >= totalProducts) throw new Error("This Page does not exists");
+        }
+        const totalPages = parseInt(totalProducts / limit) + (totalProducts % limit ? 1 : 0);
+        const prod = await query.populate("category").populate("brand").populate('color');
+        res.json({ prod, pages: totalPages });
     } catch (error) {
         throw new Error(error);
     }
@@ -99,7 +122,7 @@ const deleteProduct = asyncHandler(async (req, res) => {
 
 const addToWishlist = asyncHandler(async (req, res) => {
     const { id } = req.user;
-    const { prodId } = req.body;        
+    const { prodId } = req.body;
     validateMongoDbId(prodId);
     try {
         const user = await User.findById(id);
@@ -124,8 +147,8 @@ const addToWishlist = asyncHandler(async (req, res) => {
                     quantity: prod.quantity,
                     images: prod.images,
                 }
-            });        
-            res.json({wishlist, message: "Product Removed From Wishlist!"});
+            });
+            res.json({ wishlist, message: "Product Removed From Wishlist!" });
         } else {
             let user = await User.findByIdAndUpdate(id, {
                 $push: { wishlist: prodId }
@@ -146,8 +169,8 @@ const addToWishlist = asyncHandler(async (req, res) => {
                     quantity: prod.quantity,
                     images: prod.images,
                 }
-            });        
-            res.json({wishlist, message: "Product Added To Wishlist!"});
+            });
+            res.json({ wishlist, message: "Product Added To Wishlist!" });
         }
     } catch (error) {
         throw new Error(error);
@@ -155,25 +178,29 @@ const addToWishlist = asyncHandler(async (req, res) => {
 });
 
 const userRating = asyncHandler(async (req, res) => {
-    const { id } = req.user;
-    const { star, comment, prodId } = req.body;
+    const { star, comments, prodId, email, name, title } = req.body;
     try {
         const product = await Product.findById(prodId);
-        let isRatedByUser = product.rating.find(user => user.postedby.toString() === id.toString());
+        let isRatedByUser = product.rating.find(user => user.email === email);
+        const createdAt = Date.now();
 
         if (isRatedByUser) {
-            const updateRating = await Product.updateOne({
-                rating: { $elemMatch: isRatedByUser }
+            const updateRating = await Product.findOneAndUpdate({
+                rating: { $elemMatch: { email: email } }
             }, {
-                $set: { "rating.$.star": star, "rating.$.comment": comment },
-            }, { new: true });
+                $set: { "rating.$.star": star, "rating.$.comments": comments, "rating.$.name": name, "rating.$.title": title, "rating.$.createdAt": createdAt },
+            }, [{ 'elem.email': email }]);
+
         } else {
             const newRatedProduct = await Product.findByIdAndUpdate(prodId, {
                 $push: {
                     rating: {
                         star: star,
-                        comment: comment,
-                        postedby: id,
+                        comments: comments,
+                        name: name,
+                        title: title,
+                        email: email,
+                        createdAt,
                     },
                 },
             }, { new: true });
@@ -182,10 +209,12 @@ const userRating = asyncHandler(async (req, res) => {
         const countRating = findProduct.rating.length;
         let sumRating = findProduct.rating.map((item) => item.star).reduce((prev, curr) => prev + curr, 0);
         let finalRating = (sumRating / countRating).toFixed(1);
+        console.log(finalRating);
+
         let updatedRatedProduct = await Product.findByIdAndUpdate(prodId, {
             totalRating: finalRating,
         }, { new: true });
-        res.json(updatedRatedProduct);
+        res.json(updatedRatedProduct.rating);
 
     } catch (error) {
         throw new Error(error);
@@ -196,6 +225,7 @@ const userRating = asyncHandler(async (req, res) => {
 module.exports = {
     createProduct,
     getOneProduct,
+    specificProducts,
     getAllProducts,
     updateProduct,
     deleteProduct,

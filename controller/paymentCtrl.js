@@ -18,9 +18,7 @@ const checkout = async (req, res) => {
 };
 
 const paymentVerification = async (req, res) => {
-    const {razorpayOrderId, razorpayPaymentId } = req.body;
-    console.log(req.body);
-    
+    const {razorpayOrderId, razorpayPaymentId } = req.body;    
     res.json({razorpayOrderId, razorpayPaymentId});
 };
 
