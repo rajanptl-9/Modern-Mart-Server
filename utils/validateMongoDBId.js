@@ -5,4 +5,4 @@ const validateMongoDbId = (id) => {
     if(!isValid) throw new Error("This ID is Not Valid or Not Found!");
 };
 
-module.exports = validateMongoDbId;
+module.exports = {validateMongoDbId};

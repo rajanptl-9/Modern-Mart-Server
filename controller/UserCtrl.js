@@ -1,3 +1,4 @@
+const {validateMongoDbId} = require('../utils/validateMongoDBId');
 const User = require("../models/userModel");
 const Cart = require("../models/cartModel");
 const Product = require("../models/prodModel");
@@ -5,7 +6,6 @@ const Coupon = require("../models/couponModel");
 const Order = require("../models/orderModel");
 const { getSignedJwtToken } = require("../config/jwtToken");
 const asyncHandler = require('express-async-handler');
-const validateMongoDbId = require("../utils/validateMongodbID");
 const { getRefreshSignedToken } = require('../config/refreshToken');
 const jwt = require('jsonwebtoken');
 const { sendMail } = require("./emailCtrl");

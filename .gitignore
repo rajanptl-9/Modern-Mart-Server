@@ -1,8 +1,8 @@
 node_modules
 /.env
 
-/package-lock.json
-/package.json
+# /package-lock.json
+# /package.json
 
 e-commerce-app
 e-commerce-admin-app
