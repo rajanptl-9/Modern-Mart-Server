@@ -1,8 +1,9 @@
 const mongoose = require('mongoose');
 
-const validateMongoDbId = (id) => {
-    const isValid = mongoose.Types.ObjectId.isValid(id);
-    if(!isValid) throw new Error("This ID is Not Valid or Not Found!");
-};
+function validateMongodbID(id) {
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    throw new Error('Invalid MongoDB ID');
+  }
+}
 
-module.exports = {validateMongoDbId};
+module.exports = validateMongodbID;

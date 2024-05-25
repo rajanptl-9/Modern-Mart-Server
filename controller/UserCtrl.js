@@ -1,4 +1,4 @@
-const {validateMongoDbId} = require('../utils/validateMongodbID');
+const validateMongodbID = require('../utils/validateMongodbID');
 const User = require("../models/userModel");
 const Cart = require("../models/cartModel");
 const Product = require("../models/prodModel");
