@@ -4,7 +4,7 @@
   "description": "Backend APIs for Modern Mart Store",
   "main": "app.js",
   "scripts": {
-    "start": "node server.js",
+    "start": "nodemon app.js",
     "check-versions": "npm list"
   },
   "author": "rajan-patel",
