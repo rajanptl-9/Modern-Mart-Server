@@ -1,4 +1,3 @@
-const validateMongodbID = require('../utils/validateMongodbID');
 const User = require("../models/userModel");
 const Cart = require("../models/cartModel");
 const Product = require("../models/prodModel");
@@ -7,6 +6,7 @@ const Order = require("../models/orderModel");
 const { getSignedJwtToken } = require("../config/jwtToken");
 const asyncHandler = require('express-async-handler');
 const { getRefreshSignedToken } = require('../config/refreshToken');
+const validateMongodbID = require('../utils/validateMongodbID');
 const jwt = require('jsonwebtoken');
 const { sendMail } = require("./emailCtrl");
 const crypto = require('crypto');
@@ -133,7 +133,7 @@ const logoutUser = asyncHandler(async (req, res) => {
 
 const updateProfile = asyncHandler(async (req, res) => {
     const { _id } = req.user;    
-    validateMongoDbId(_id);
+    validateMongodbID(_id);
     const { firstname, lastname } = req.body;
     try {
         const updatedProfile = await User.findByIdAndUpdate(_id, {
@@ -198,7 +198,7 @@ const getAllUsers = asyncHandler(async (req, res) => {
 
 const getOneUser = asyncHandler(async (req, res) => {
     const { id } = req.user;
-    validateMongoDbId(id);
+    validateMongodbID(id);
     try {
         const user = await User.findById(id);
         res.json(user);
@@ -209,7 +209,7 @@ const getOneUser = asyncHandler(async (req, res) => {
 
 const updateUser = asyncHandler(async (req, res) => {
     const { id } = req.user;
-    validateMongoDbId(id);
+    validateMongodbID(id);
     try {
         const user = await User.findByIdAndUpdate(id, {
             firstname: req?.body?.firstname,
@@ -225,7 +225,7 @@ const updateUser = asyncHandler(async (req, res) => {
 
 const deleteUser = asyncHandler(async (req, res) => {
     const { id } = req.user;
-    validateMongoDbId(id);
+    validateMongodbID(id);
     try {
         const user = await User.findByIdAndDelete(id);
         res.json(user);
@@ -236,7 +236,7 @@ const deleteUser = asyncHandler(async (req, res) => {
 
 const blockUser = asyncHandler(async (req, res) => {
     let { id } = req.params;
-    validateMongoDbId(id);
+    validateMongodbID(id);
     try {
         const blockedUser = await User.findByIdAndUpdate(id, {
             isBlocked: "true",
@@ -256,7 +256,7 @@ const blockUser = asyncHandler(async (req, res) => {
 
 const unblockUser = asyncHandler(async (req, res) => {
     let { id } = req.params;
-    validateMongoDbId(id);
+    validateMongodbID(id);
     try {
         const unblockedUser = await User.findByIdAndUpdate(id, {
             isBlocked: "false",
@@ -277,7 +277,7 @@ const updatePassword = asyncHandler(async (req, res) => {
     const { _id } = req.user;
     const { password } = req.body;
 
-    validateMongoDbId(_id);
+    validateMongodbID(_id);
     const user = await User.findById(_id);
     if (password) {
         user.password = password;
@@ -331,7 +331,7 @@ const resetPassword = asyncHandler(async (req, res) => {
 
 const getWishlist = asyncHandler(async (req, res) => {
     const { _id } = req.user;
-    validateMongoDbId(_id);
+    validateMongodbID(_id);
     try {
         const findUser = await User.findById(_id).populate("wishlist").populate({
             path: "wishlist",
@@ -359,7 +359,7 @@ const getWishlist = asyncHandler(async (req, res) => {
 
 const saveAddress = asyncHandler(async (req, res) => {
     const { _id } = req.user;
-    validateMongoDbId(_id);
+    validateMongodbID(_id);
     const { address } = req.body;
     try {
         const updatedAddressUser = await User.findByIdAndUpdate(_id, {
@@ -373,7 +373,7 @@ const saveAddress = asyncHandler(async (req, res) => {
 
 const userCart = asyncHandler(async (req, res) => {
     const { _id } = req.user;
-    validateMongoDbId(_id);
+    validateMongodbID(_id);
     const { productId, color, quantity, price } = req.body;
     try {
         const product = await Cart.findOne({ productId: productId, userId: _id });
@@ -402,7 +402,7 @@ const userCart = asyncHandler(async (req, res) => {
 
 const getCart = asyncHandler(async (req, res) => {
     const { _id } = req.user;
-    validateMongoDbId(_id);
+    validateMongodbID(_id);
     try {
         const getCart = await Cart.find({ userId: _id }).populate('productId').populate("color").exec();
         res.json(getCart);
@@ -413,9 +413,9 @@ const getCart = asyncHandler(async (req, res) => {
 
 const removeProductFromCart = asyncHandler(async (req, res) => {
     const { _id } = req.user;
-    validateMongoDbId(_id);
+    validateMongodbID(_id);
     const { id } = req.params;
-    validateMongoDbId(id);
+    validateMongodbID(id);
     try {
         const deleteProduct = await Cart.findOneAndDelete({ userId: _id, productId: id });
         const cart = await Cart.find({userId: _id});
@@ -427,7 +427,7 @@ const removeProductFromCart = asyncHandler(async (req, res) => {
 
 const updateCartProduct = asyncHandler(async (req, res) => {
     const { _id } = req.user;
-    validateMongoDbId(_id);
+    validateMongodbID(_id);
     const { productId, quantity } = req.body;
     try {
         const updatedCart = await Cart.findOneAndUpdate({ userId: _id, productId }, { $set: { quantity: parseInt(quantity) } }, { new: true });        
@@ -440,7 +440,7 @@ const updateCartProduct = asyncHandler(async (req, res) => {
 
 const clearCart = asyncHandler(async (req, res) => {
     const { _id } = req.user;
-    validateMongoDbId(_id);
+    validateMongodbID(_id);
     try {
         const deleteCart = await Cart.findOneAndDelete({ orderedBy: _id });
         res.json(deleteCart);
@@ -451,7 +451,7 @@ const clearCart = asyncHandler(async (req, res) => {
 
 const applyCoupon = asyncHandler(async (req, res) => {
     const { _id } = req.user;
-    validateMongoDbId(_id);
+    validateMongodbID(_id);
     const { coupon } = req.body;
     try {
         const findCoupon = await Coupon.findOne({ name: coupon });
@@ -471,7 +471,7 @@ const applyCoupon = asyncHandler(async (req, res) => {
 
 const makeOrder = asyncHandler(async (req, res) => {
     const { _id } = req.user;
-    validateMongoDbId(_id);
+    validateMongodbID(_id);
     const { shippingInfo, orderItems, totalPrice, totalPriceAfterDiscount, paymentInfo, paidAt } = req.body;
     console.log(req.body);
 
@@ -499,7 +499,7 @@ const makeOrder = asyncHandler(async (req, res) => {
 
 const getOrder = asyncHandler(async (req, res) => {
     const { _id } = req.user;
-    validateMongoDbId(_id);
+    validateMongodbID(_id);
     try {
         const findOrder = await Order.find({ orderedBy: _id }).populate('products.product').exec();
         // const findOrder = await Order.findOne({orderedBy:_id});
@@ -511,7 +511,7 @@ const getOrder = asyncHandler(async (req, res) => {
 
 const getMyOrders = asyncHandler(async (req, res) => {
     const { _id } = req.user;
-    validateMongoDbId(_id);
+    validateMongodbID(_id);
     try {
         const findOrder = await Order.find({ user: _id }).populate('orderItems.product').populate("orderItems.color").exec();
         res.json(findOrder);
@@ -531,7 +531,7 @@ const getAllOrder = asyncHandler(async (req, res) => {
 
 const updateOrderStatus = asyncHandler(async (req, res) => {
     const { _id } = req.user;
-    validateMongoDbId(_id);
+    validateMongodbID(_id);
     const { status } = req.body;
     const { id } = req.params;
     try {

@@ -13,7 +13,7 @@ const createEnquiry = asyncHandler(async(req,res) => {
 
 const updateEnquiry = asyncHandler(async(req,res) => {
     const {id} = req.params;
-    validateMongoDbId(id);
+    validateMongodbID(id);
     try {       
         const updateEnquiry = await Enquiry.findByIdAndUpdate(id,req.body,{new:true});
         res.json(updateEnquiry);
@@ -24,7 +24,7 @@ const updateEnquiry = asyncHandler(async(req,res) => {
 
 const deleteEnquiry = asyncHandler(async(req,res) => {
     const {id} = req.params;
-    validateMongoDbId(id);
+    validateMongodbID(id);
     try {       
         const deleteEnquiry = await Enquiry.findByIdAndDelete(id);
         res.json(deleteEnquiry);

@@ -13,7 +13,7 @@ const createColor = asyncHandler(async(req,res) => {
 
 const updateColor = asyncHandler(async(req,res) => {
     const {id} = req.params;
-    validateMongoDbId(id);
+    validateMongodbID(id);
     try {       
         const updateColor = await Color.findByIdAndUpdate(id,req.body,{new:true});
         res.json(updateColor);
@@ -24,7 +24,7 @@ const updateColor = asyncHandler(async(req,res) => {
 
 const deleteColor = asyncHandler(async(req,res) => {
     const {id} = req.params;
-    validateMongoDbId(id);
+    validateMongodbID(id);
     try {       
         const deleteColor = await Color.findByIdAndDelete(id);
         res.json(deleteColor);

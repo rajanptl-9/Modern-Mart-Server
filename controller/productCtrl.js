@@ -123,7 +123,7 @@ const deleteProduct = asyncHandler(async (req, res) => {
 const addToWishlist = asyncHandler(async (req, res) => {
     const { id } = req.user;
     const { prodId } = req.body;
-    validateMongoDbId(prodId);
+    validateMongodbID(prodId);
     try {
         const user = await User.findById(id);
         const isPresent = user.wishlist.find((id) => id.toString() === prodId);
