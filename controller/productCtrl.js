@@ -2,7 +2,7 @@ const Product = require('../models/prodModel');
 const User = require('../models/userModel');
 const asyncHandler = require("express-async-handler");
 const slugify = require('slugify');
-const validateMongodbID = require('../utils/validateMongoDBID');
+const validateMongoDBId = require('../utils/validateMongoDBId');
 const fs = require('fs');
 
 const createProduct = asyncHandler(async (req, res) => {
@@ -123,7 +123,7 @@ const deleteProduct = asyncHandler(async (req, res) => {
 const addToWishlist = asyncHandler(async (req, res) => {
     const { id } = req.user;
     const { prodId } = req.body;
-    validateMongodbID(prodId);
+    validateMongoDBId(prodId);
     try {
         const user = await User.findById(id);
         const isPresent = user.wishlist.find((id) => id.toString() === prodId);
